@@ -8,7 +8,7 @@ namespace test {
 		ASSERT_TRUE(js_);
 	}
 
-	TEST_F(JavascriptTest, DuketapePrintTest)
+	TEST_F(JavascriptTest, DuktapePrintTest)
 	{
 		ASSERT_TRUE(js_);
 		EXPECT_EQ(0, js_->GetPrintLines());
@@ -28,7 +28,7 @@ namespace test {
 				}
 			)");
 		EXPECT_EQ(0, js_->GetPrintLines());
-		js_->CallFunction("test_func");
+		std::ignore = js_->CallFunction("test_func");
 		EXPECT_EQ(1, js_->GetPrintLines());
 		EXPECT_EQ("test", js_->GetPrintString());
 		EXPECT_EQ(0, js_->GetPrintLines());
@@ -45,7 +45,7 @@ namespace test {
 				}
 			)");
 		EXPECT_EQ(0, js_->GetPrintLines());
-		js_->CallFunction("test_func", { 2, 3 });
+		std::ignore = js_->CallFunction("test_func", { 2, 3 });
 		EXPECT_EQ(1, js_->GetPrintLines());
 		EXPECT_EQ("result: 5", js_->GetPrintString());
 		EXPECT_EQ(0, js_->GetPrintLines());
@@ -124,32 +124,23 @@ namespace test {
 	TEST_F(JavascriptTest, DuktapeRetObjectFunctionTest)
 	{
 		ASSERT_TRUE(js_);
-		try {
-			js_->AddFromString(
-				R"(
-				var test_func = function(a) {
-					return {
-						'test' : 'prout',
-						'value' : 64,
-						'empty' : {},
-						'getValue' : function() {
-							return this.value;
-						}
-					};
-				}
-			)");
-		}
-		catch (std::exception ex)
-		{
-			std::cerr << ex.what() << std::endl;
-		}
+		js_->AddFromString(
+			R"(
+			var test_func = function(a) {
+				return {
+					'test' : 'test',
+					'value' : 64,
+					'obj' : {	'value' : 42	}
+				};
+			}
+		)");
 		EXPECT_EQ(0, js_->GetPrintLines());
 		auto rs = js_->CallFunction("test_func");
 		using map_type = std::map<std::string, std::any>;
 		map_type should_be{
-			{ "test", std::string("prout") },
+			{ "test", std::string("test") },
 			{ "value", 64.0 },
-			{ "empty", map_type{} }
+			{ "obj", map_type{ { "value", 42.0 } } }
 		};
 		map_type is = std::any_cast<map_type>(rs);
  		EXPECT_EQ(
@@ -159,8 +150,13 @@ namespace test {
 			std::any_cast<double>(should_be["value"]),
 			std::any_cast<double>(is["value"]));
 		EXPECT_EQ(
-			std::any_cast<map_type>(should_be["empty"]).size(),
-			std::any_cast<map_type>(is["empty"]).size());
+			std::any_cast<map_type>(should_be["obj"]).size(),
+			std::any_cast<map_type>(is["obj"]).size());
+		EXPECT_EQ(
+			std::any_cast<double>(
+				std::any_cast<map_type>(should_be["obj"])["value"]),
+			std::any_cast<double>(
+				std::any_cast<map_type>(is["obj"])["value"]));
 	}
 
 } // End namespace test.

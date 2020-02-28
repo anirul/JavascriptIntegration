@@ -1,6 +1,7 @@
 #include <functional>
 #include <stdexcept>
 #include <sstream>
+#include <iostream>
 #include "duktape_impl.h"
 
 namespace javascript {
@@ -33,7 +34,7 @@ namespace javascript {
 		duk_push_string(p_duk_ctx_, source.c_str());
 		if (duk_peval(p_duk_ctx_) != 0)
 		{
-			throw duk_safe_to_string(p_duk_ctx_, -1);
+			throw std::runtime_error(duk_safe_to_string(p_duk_ctx_, -1));
 		}
 	}
 
@@ -85,12 +86,12 @@ namespace javascript {
 		return ret;
 	}
 
-	const std::string DuktapeImpl::GetTopType() const
+	const std::string DuktapeImpl::GetTopType(int id /*= -1*/) const
 	{
 		static std::map<int, std::string> type_names = 
 		{
 			{ DUK_TYPE_NONE,		"none" },
-			{ DUK_TYPE_UNDEFINED,	"undefined" },
+			{ DUK_TYPE_UNDEFINED,	"undef" },
 			{ DUK_TYPE_NULL,		"null" },
 			{ DUK_TYPE_BOOLEAN,		"boolean" },
 			{ DUK_TYPE_NUMBER,		"number" },
@@ -98,11 +99,11 @@ namespace javascript {
 			{ DUK_TYPE_OBJECT,		"object" },
 			{ DUK_TYPE_BUFFER,		"buffer" },
 			{ DUK_TYPE_POINTER,		"pointer" },
-			{ DUK_TYPE_LIGHTFUNC,	"light function" },
+			{ DUK_TYPE_LIGHTFUNC,	"func" },
 		};
 		for (const auto& type_name : type_names)
 		{
-			if (duk_check_type(p_duk_ctx_, -1, type_name.first))
+			if (duk_check_type(p_duk_ctx_, id, type_name.first))
 			{
 				return type_name.second;
 			}
@@ -156,7 +157,7 @@ namespace javascript {
 			{
 				std::ostringstream oss{};
 				oss << "unknown arg type: (" << field.type().name() << ") ";
-				ret += oss.str();
+				throw std::runtime_error(oss.str());
 			}
 		}
 		return pushed;
@@ -203,13 +204,10 @@ namespace javascript {
 		{
 			return nullptr;
 		}
-		else
-		{
-			// Should be buffer, pointer and light function?
-			std::ostringstream oss{};
-			oss << "unknown return type: (" << GetTopType() << ") ";
-			throw std::runtime_error(oss.str());
-		}
+		// Should be buffer, pointer and light function?
+		std::ostringstream oss{};
+		oss << "unknown return type: (" << GetTopType() << ") ";
+		throw std::runtime_error(oss.str());
 	}
 
 	const std::size_t DuktapeImpl::GetPrintLines() const

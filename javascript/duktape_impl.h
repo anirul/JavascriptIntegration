@@ -15,8 +15,8 @@ namespace javascript {
 	public:
 		DuktapeImpl();
 		virtual ~DuktapeImpl();
-		void AddFromString(const std::string& source) override;
-		void AddFromStream(std::istream& is) override;
+		const std::any AddFromString(const std::string& source) override;
+		const std::any AddFromStream(std::istream& is) override;
 		const std::size_t GetPrintLines() const override;
 		const std::string GetPrintString() override;
 		const std::any CallFunction(
@@ -28,10 +28,11 @@ namespace javascript {
 			const std::vector<std::any>& args = {}) override;
 
 	protected:
-		const std::string GetTopType() const;
+		const std::string GetTopType(int id = -1) const;
 		const std::size_t SetArgs(
 			const std::vector<std::any>& args) const;
 		const std::any GetReturn() const;
+		const std::any GetStack() const;
 
 	private:
 		duk_context* p_duk_ctx_ = nullptr;
