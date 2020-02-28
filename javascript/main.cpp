@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include "../javascript/javascript.h"
 
 int main(int ac, char** av)
@@ -15,11 +16,18 @@ int main(int ac, char** av)
 			std::getline(std::cin, str);
 			js->AddFromString(str);
 		}
-		else
+		else if (ac == 2)
 		{
 			std::string file_name = av[1];
 			std::ifstream ifs(file_name.c_str());
 			js->AddFromStream(ifs);
+		} 
+		else
+		{
+			std::ostringstream oss;
+			oss << "incorrect list of parameters." << std::endl;
+			oss << " > javascript_cmd [filename]";
+			throw std::runtime_error(oss.str());
 		}
 		while (js->GetPrintLines())
 		{
